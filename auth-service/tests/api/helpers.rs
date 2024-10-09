@@ -19,10 +19,10 @@ impl TestApp {
         #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(app.run());
 
-        let http_client = todo!(); // Create a Reqwest http client instance
+        let http_client = reqwest::Client::new(); // Create a Reqwest http client instance
 
         // Create new `TestApp` instance and return it
-        todo!()
+        TestApp { address, http_client }
     }
 
     pub async fn get_root(&self) -> reqwest::Response {
@@ -33,5 +33,43 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    // TODO: Implement helper functions for all other routes (signup, login, logout, verify-2fa, and verify-token)
+    pub async fn signup(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/signup", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+    pub async fn login(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/login", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn logout(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/logout", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn verify_2fa(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/verify-2fa", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn verify_token(&self) -> reqwest::Response {
+        self.http_client
+            .post(&format!("{}/verify-token", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
 }
