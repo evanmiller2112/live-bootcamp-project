@@ -1,4 +1,5 @@
 use auth_service::Application;
+use reqwest::Client;
 
 
 pub struct TestApp {
