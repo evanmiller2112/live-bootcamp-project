@@ -24,3 +24,19 @@ pub async fn should_return_422_if_malformed_input() {
         );
     }
 }
+
+
+#[tokio::test]
+async fn should_return_201_if_valid_input() {
+    let app = crate::helpers::TestApp::new().await;
+
+    let valid_signup_data = serde_json::json!({
+    "email": crate::helpers::get_random_email(),
+    "password": "ValidPassword123!",
+    "requires2FA": true
+});
+
+    let response = app.post_signup(&valid_signup_data).await;
+
+    assert_eq!(response.status().as_u16(), 201);
+}

@@ -8,11 +8,18 @@ edition = "2021"
 [dependencies]
 axum = "0.7.4"
 tokio = { version = "1.36", features = ["full"] }
-tower-http = { version = "0.5.0", features = ["fs"] }
+tower-http = { version = "0.5.0", features = ["fs", "cors"] }
 log = "0.4.22"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 uuid = { version = "1.7.0", features = ["v4", "serde"] }
+validator = "0.16.1"
+async-trait = "0.1.78"
+axum-extra = { version = "0.9.2", features = ["cookie"] }
+
 
 [dev-dependencies]
-reqwest = { version = "0.11.26", default-features = false, features = ["json"] }
+fake = "=2.3.0"
+quickcheck = "0.9.2"
+quickcheck_macros = "0.9.1"
+reqwest = { version = "0.11.26", default-features = false, features = ["json", "cookies"] }
