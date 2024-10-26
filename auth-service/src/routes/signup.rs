@@ -8,7 +8,6 @@ use crate::app_state::AppState;
 use crate::domain::{Email, Password};
 use crate::domain::error::AuthAPIError;
 use crate::domain::user::User;
-use crate::services::hashmap_user_store::HashmapUserStore;
 
 
 pub async fn signup(State(state): State<AppState>, 
