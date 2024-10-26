@@ -60,6 +60,7 @@ impl IntoResponse for AuthAPIError {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
             }
             AuthAPIError::IncorrectCredentials => (StatusCode::UNAUTHORIZED, "Incorrect credentials"),
+            AuthAPIError::UnprocessableEntity => (StatusCode::UNPROCESSABLE_ENTITY, "Input Unprocessable or Malformed")
         };
         let body = Json(ErrorResponse {
             error: error_message.to_string(),
