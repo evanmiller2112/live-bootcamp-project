@@ -18,21 +18,22 @@ pub async fn login(
         Json(request): Json<LoginRequest>
             ) -> Result<impl IntoResponse, AuthAPIError> {
     let email =
-        Email::parse(request.email.clone()).map_err(|_| AuthAPIError::UnprocessableEntity)?;
+        Email::parse(request.email.clone()).
+            map_err(|_| AuthAPIError::UnprocessableEntity)?;
     let password =
-        Password::parse(request.password.clone()).map_err(|_| AuthAPIError::UnprocessableEntity)?;
-    let mut user_store = state.user_store.write().await;
+        Password::parse(request.password.clone()).
+            map_err(|_| AuthAPIError::UnprocessableEntity)?;
+    let user_store = state.user_store.write().await;
 
-    let validate_user = user_store.validate_user(&email, &password).await;
-    if validate_user.is_err() {
-        return Err(AuthAPIError::IncorrectCredentials);
-    }
+    let validate_user = 
+        user_store.validate_user(&email, &password).await
+            .map_err(|_| AuthAPIError::IncorrectCredentials);
     let response = Json(LoginResponse {
         message: "User logged in successfully!".to_string(),
     });
-    
 
-    let auth_cookie = 
+
+    let auth_cookie =
         generate_auth_cookie(&email).map_err(|_| AuthAPIError::UnexpectedError)?;
 
     let updated_jar = jar.add(auth_cookie);
