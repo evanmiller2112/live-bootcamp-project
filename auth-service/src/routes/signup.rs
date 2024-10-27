@@ -23,7 +23,7 @@ pub async fn signup(State(state): State<AppState>,
     let user = User::new(email, password, requires_2fa);
     let mut user_store = state.user_store.write().await;
 
-    let add_user = user_store.add_user(user);
+    user_store.add_user(user).await.map_err(|_| AuthAPIError::UserAlreadyExists)?;
 
     let response = Json(SignupResponse {
         message: "User created successfully!".to_string(),

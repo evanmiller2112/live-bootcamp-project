@@ -16,7 +16,10 @@ uuid = { version = "1.7.0", features = ["v4", "serde"] }
 validator = "0.16.1"
 async-trait = "0.1.78"
 axum-extra = { version = "0.9.2", features = ["cookie"] }
-
+jsonwebtoken = "9.2.0"
+chrono = "0.4.35"
+dotenvy = "0.15.7"
+lazy_static = "1.4.0"
 
 [dev-dependencies]
 fake = "=2.3.0"
