@@ -1,3 +1,4 @@
+use crate::domain::UserStoreError;
 use crate::domain::data_stores::UserStore;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -16,29 +17,35 @@ pub async fn login(
         State(state): State<AppState>,
         jar: CookieJar,
         Json(request): Json<LoginRequest>
-            ) -> Result<impl IntoResponse, AuthAPIError> {
-    let email =
-        Email::parse(request.email.clone()).
-            map_err(|_| AuthAPIError::UnprocessableEntity)?;
-    let password =
-        Password::parse(request.password.clone()).
-            map_err(|_| AuthAPIError::UnprocessableEntity)?;
-    let user_store = state.user_store.write().await;
+            ) -> (CookieJar, Result<impl IntoResponse, AuthAPIError>) {
+    let password = match Password::parse(request.password) {
+        Ok(password) => password,
+        Err(_) => return (jar, Err(AuthAPIError::InvalidCredentials)),
+    };
 
-    let validate_user = 
-        user_store.validate_user(&email, &password).await
-            .map_err(|_| AuthAPIError::IncorrectCredentials);
-    let response = Json(LoginResponse {
-        message: "User logged in successfully!".to_string(),
-    });
+    let email = match Email::parse(request.email) {
+        Ok(email) => email,
+        Err(_) => return (jar, Err(AuthAPIError::InvalidCredentials)),
+    };
+    let user_store = &state.user_store.write().await;
 
+    if user_store.validate_user(&email, &password).await.is_err() {
+        return (jar, Err(AuthAPIError::IncorrectCredentials));
+    }
 
-    let auth_cookie =
-        generate_auth_cookie(&email).map_err(|_| AuthAPIError::UnexpectedError)?;
+    let user = match user_store.get_user(&email).await {
+        Ok(user) => user,
+        Err(_) => return (jar, Err(AuthAPIError::IncorrectCredentials)),
+    };
 
+    let auth_cookie = match generate_auth_cookie(&user.email) {
+        Ok(cookie) => cookie,
+        Err(_) => return (jar, Err(AuthAPIError::UnexpectedError)),
+    };
+    
     let updated_jar = jar.add(auth_cookie);
 
-    Ok((updated_jar, (StatusCode::OK.into_response())))
+    (updated_jar, Ok((StatusCode::OK.into_response())))
 
 }
 

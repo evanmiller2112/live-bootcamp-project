@@ -1,17 +1,25 @@
 use std::sync::{Arc, RwLock};
-use auth_service::app_state::AppState;
-use auth_service::Application;
-use auth_service::services::hashmap_user_store::HashmapUserStore;
+use axum_extra::extract::CookieJar;
+use auth_service::{
+    app_state::{AppState, BannedTokenStoreType},
+    services::{
+        hashmap_user_store::HashmapUserStore, hashset_banned_token_store::HashsetBannedTokenStore,
+    },
+    Application,
+};
+use reqwest::cookie::Jar;
 
 pub struct TestApp {
     pub address: String,
+    pub cookie_jar: Arc<Jar>,
     pub http_client: reqwest::Client,
 }
 
 impl TestApp {
     pub async fn new() -> Self {
         let user_store = Arc::new(tokio::sync::RwLock::new(HashmapUserStore::default()));
-        let app_state = AppState::new(user_store);
+        let banned_token_store = Arc::new(tokio::sync::RwLock::new(HashsetBannedTokenStore::default()));
+        let app_state = AppState::new(user_store, banned_token_store);
         let app = Application::build(app_state,"127.0.0.1:0")
             .await
             .expect("Failed to build app");
@@ -25,8 +33,17 @@ impl TestApp {
 
         let http_client = reqwest::Client::new(); // Create a Reqwest http client instance
 
-        // Create new `TestApp` instance and return it
-        TestApp { address, http_client }
+        let cookie_jar = Arc::new(Jar::default());
+        let http_client = reqwest::Client::builder()
+            .cookie_provider(cookie_jar.clone())
+            .build()
+            .unwrap();
+
+        Self {
+            address,
+            cookie_jar,
+            http_client,
+        }
     }
 
     pub async fn get_root(&self) -> reqwest::Response {

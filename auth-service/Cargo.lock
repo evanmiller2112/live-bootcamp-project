@@ -60,6 +60,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "chrono",
+ "cookie 0.18.1",
  "dotenvy",
  "fake",
  "jsonwebtoken",
