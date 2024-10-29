@@ -1,11 +1,13 @@
-use axum::body::Body;
-use axum::Json;
+use axum::{
+    http::{Method, StatusCode},
+    response::{IntoResponse, Response},
+    routing::post,
+    serve::Serve,
+    Json, Router,
+};
 use std::error::Error;
-use axum::{http::StatusCode, response::IntoResponse,
-           routing::post, serve::Serve, Router};
-use axum::http::Response;
 use serde::{Deserialize, Serialize};
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 use routes::*;
 use app_state::AppState;
 use crate::domain::error::AuthAPIError;
@@ -67,9 +69,9 @@ impl IntoResponse for AuthAPIError {
             AuthAPIError::UnprocessableEntity =>
                     (StatusCode::UNPROCESSABLE_ENTITY, "Input Unprocessable or Malformed"),
             AuthAPIError::MissingToken =>
-                    (StatusCode::BAD_REQUEST, "Missing token"),
+                    (StatusCode::BAD_REQUEST, "Missing auth token"),
             AuthAPIError::InvalidToken =>
-                    (StatusCode::UNAUTHORIZED, "Invalid token"),
+                    (StatusCode::UNAUTHORIZED, "Invalid auth token"),
         };
         let body = Json(ErrorResponse {
             error: error_message.to_string(),
