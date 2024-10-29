@@ -8,6 +8,7 @@ use auth_service::{
     Application,
 };
 use reqwest::cookie::Jar;
+use auth_service::utils::constants::{prod, test};
 
 pub struct TestApp {
     pub address: String,
@@ -20,7 +21,7 @@ impl TestApp {
         let user_store = Arc::new(tokio::sync::RwLock::new(HashmapUserStore::default()));
         let banned_token_store = Arc::new(tokio::sync::RwLock::new(HashsetBannedTokenStore::default()));
         let app_state = AppState::new(user_store, banned_token_store);
-        let app = Application::build(app_state,"127.0.0.1:0")
+        let app = Application::build(app_state, test::APP_ADDRESS)
             .await
             .expect("Failed to build app");
 
