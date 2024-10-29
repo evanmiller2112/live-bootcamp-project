@@ -5,25 +5,35 @@ use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
 async fn should_return_200_if_valid_jwt_cookie() {
-    // TODO this shouldn't work .. I think we need to make an actual cookie here?
     let app = TestApp::new().await;
-    
 
-    app.cookie_jar.add_cookie_str(
-        &format!(
-            "{}=invalid; HttpOnly; SameSite=Lax; Secure; Path=/",
-            JWT_COOKIE_NAME
-        ),
-        &Url::parse("http://127.0.0.1").expect("Failed to parse URL"),
-    );
+    //generate random email
+    let random_email = get_random_email();
+    let password = "abcABC123".to_owned();
 
-    let verify_result = app.verify_token().await;
+    //generate signup body using serde::json
+    let signup_body = serde_json::json!({
+        "email": random_email,
+        "password": password,
+        "requires2FA": false,
+    });
 
+    // Post signup, expect 201 or throw error.
+    let response = app.post_signup(&signup_body).await;
+    assert_eq!(response.status().as_u16(),
+               201,
+               "Signup failed - expected 201, with input: {}", signup_body.to_string());
 
-    assert_eq!(
-        verify_result.status().as_u16(),
-        200,
-    );
+    // Login
+    let login_body = serde_json::json!({
+        "email": random_email,
+        "password": password,
+    });
+    let response = app.post_login(&login_body).await;
+    assert_eq!(response.status().as_u16(),
+               200,
+               "Login failed - expected 200, got {}",
+               response.status().as_u16());
 }
 
 #[tokio::test]
@@ -35,8 +45,6 @@ async fn should_return_400_if_logout_called_twice_in_a_row() {
     let password = "abcABC123".to_owned();
 
     //generate signup body using serde::json
-    // TODO this confirmation shouldn't be necessary, should be validated in
-    // client-side code since it will be parsed prior to use
     let signup_body = serde_json::json!({
         "email": random_email,
         "password": password,
