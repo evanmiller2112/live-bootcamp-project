@@ -24,16 +24,43 @@ async fn should_return_200_if_valid_jwt_cookie() {
                201,
                "Signup failed - expected 201, with input: {}", signup_body.to_string());
 
-    // Login
     let login_body = serde_json::json!({
         "email": random_email,
         "password": password,
     });
     let response = app.post_login(&login_body).await;
+
     assert_eq!(response.status().as_u16(),
                200,
                "Login failed - expected 200, got {}",
                response.status().as_u16());
+
+    let auth_cookie = response.cookies()
+        .find(|cookie| cookie.name() == JWT_COOKIE_NAME)
+        .expect("No auth cookie found.");
+    assert!(!auth_cookie.value().is_empty(), "Auth cookie value is empty but it shouldn't be.");
+
+    let token = auth_cookie.value();
+    let response = app.post_logout().await;
+
+    assert_eq!(response.status().as_u16(), 200,
+               "Logout failed - expected 200, got {}", response.status().as_u16());
+
+    let auth_cookie = response
+        .cookies()
+        .find(|cookie| cookie.name() == JWT_COOKIE_NAME)
+        .expect("No auth cookie found");
+
+    assert!(auth_cookie.value().is_empty());
+
+    let banned_token_store = app.banned_token_store.read().await;
+    let contains_token = banned_token_store
+        .contains_token(token)
+        .await
+        .expect("Failed to check if token is banned");
+
+    assert!(contains_token);
+
 }
 
 #[tokio::test]

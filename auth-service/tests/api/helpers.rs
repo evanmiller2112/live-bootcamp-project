@@ -8,11 +8,13 @@ use auth_service::{
     Application,
 };
 use reqwest::cookie::Jar;
+use auth_service::domain::BannedTokenStoreError;
 use auth_service::utils::constants::{prod, test};
 
 pub struct TestApp {
     pub address: String,
     pub cookie_jar: Arc<Jar>,
+    pub banned_token_store: BannedTokenStoreType,
     pub http_client: reqwest::Client,
 }
 
@@ -20,7 +22,7 @@ impl TestApp {
     pub async fn new() -> Self {
         let user_store = Arc::new(tokio::sync::RwLock::new(HashmapUserStore::default()));
         let banned_token_store = Arc::new(tokio::sync::RwLock::new(HashsetBannedTokenStore::default()));
-        let app_state = AppState::new(user_store, banned_token_store);
+        let app_state = AppState::new(user_store, banned_token_store.clone());
         let app = Application::build(app_state, test::APP_ADDRESS)
             .await
             .expect("Failed to build app");
@@ -43,6 +45,7 @@ impl TestApp {
         Self {
             address,
             cookie_jar,
+            banned_token_store,
             http_client,
         }
     }
