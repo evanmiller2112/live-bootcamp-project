@@ -11,7 +11,3 @@ async fn main() {
     app.run().await.expect("Failed to run app");
 
 }
-
-async fn hello_handler() -> Html<&'static str> {
-    Html("<h1>Hello, Rust Pals!</h1>")
-}
