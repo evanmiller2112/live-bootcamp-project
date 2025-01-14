@@ -1,4 +1,5 @@
 use auth_service::Application;
+use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
@@ -7,7 +8,10 @@ pub struct TestApp {
 
 impl TestApp {
     pub async fn new() -> Self {
-        let app = Application::build("127.0.0.1:0")
+        let user_store = todo!();
+        let app_state = todo!();
+        
+        let app = Application::build(app_state, "127.0.0.1:0")
             .await
             .expect("Failed to build app");
 
@@ -29,12 +33,16 @@ impl TestApp {
             .expect("Failed to execute request for root test.")
     }
 
-    pub async fn post_signup(&self) -> reqwest::Response {
+    pub async fn post_signup<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
         self.http_client
             .post(&format!("{}/signup", &self.address))
+            .json(body)
             .send()
             .await
-            .expect("Failed to execute request for signup test.")
+            .expect("Failed to execute request.")
     }
 
     pub async fn post_login(&self) -> reqwest::Response {
@@ -68,4 +76,10 @@ impl TestApp {
             .await
             .expect("Failed to execute request for verify-token test.")
     }
+
+
+}
+
+pub fn get_random_email() -> String {
+    format!("{}@example.com", Uuid::new_v4())
 }
