@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 use email_address::*;
 
 use crate::{app_state::AppState, domain::User};
-use crate::services::UserStoreError;
-use crate::services::HashmapUserStore;
 use crate::domain::AuthAPIError;
 
 pub async fn signup(
@@ -19,19 +17,19 @@ pub async fn signup(
     if !EmailAddress::is_valid(&user.email) {
         return Err(AuthAPIError::InvalidCredentials);
     }
-    
+
     // Check for password too short.
     if user.password.len() < 8 {
         return Err(AuthAPIError::InvalidCredentials);
     }
-    
+
     // If user exists, throw that error.
-    if let Ok(User) = user_store.get_user(&user.email) {
+    if let Ok(User) = user_store.get_user(&user.email).await {
         return Err(AuthAPIError::UserAlreadyExists);
     }
-    
+
     // If there's an error, throw an error
-    if let Err(e) = user_store.add_user(user)
+    if let Err(e) = user_store.add_user(user).await
     {
         return Err(AuthAPIError::UnexpectedError);
     }

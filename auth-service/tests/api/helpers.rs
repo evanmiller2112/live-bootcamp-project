@@ -1,9 +1,11 @@
+use std::collections::HashMap;
 use auth_service::Application;
 use uuid::Uuid;
-use auth_service::services::hashmap_user_store;
+use auth_service::services::{hashmap_user_store, HashmapUserStore};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use auth_service::app_state::AppState;
+use auth_service::domain::UserStore;
 
 pub struct TestApp {
     pub address: String,
@@ -12,7 +14,7 @@ pub struct TestApp {
 
 impl TestApp {
     pub async fn new() -> Self {
-        let user_store = hashmap_user_store::HashmapUserStore::new();
+        let user_store = HashmapUserStore::new();
         let app_state = AppState::new(Arc::new(RwLock::new(user_store)));
         
         let app = Application::build(app_state, "127.0.0.1:0")

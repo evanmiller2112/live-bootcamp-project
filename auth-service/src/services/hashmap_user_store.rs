@@ -1,27 +1,25 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 use crate::domain::User;
-
-#[derive(Debug, PartialEq)]
-pub enum UserStoreError {
-    UserAlreadyExists,
-    UserNotFound,
-    InvalidCredentials,
-    UnexpectedError,
-}
+use crate::domain::UserStoreError;
+use crate::domain::UserStore;
 
 #[derive(Default)]
-pub struct  HashmapUserStore {
+pub struct HashmapUserStore {
     users: HashMap<String, User>,
 }
 
+
 impl HashmapUserStore {
     pub fn new() -> Self {
-        Self {
-            users: HashMap::new(),
-        }
+        Self::default()
     }
-    pub fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
+}
+#[async_trait::async_trait]
+impl UserStore for HashmapUserStore {
+
+    
+     async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         if self.users.contains_key(&user.email) {
             Err(UserStoreError::UserAlreadyExists)
         } else {
@@ -30,15 +28,15 @@ impl HashmapUserStore {
         }
     }
 
-    pub fn get_user(&self, email: &str) -> Result<&User, UserStoreError> {
+     async fn get_user(&self, email: &str) -> Result<User, UserStoreError> {
         if self.users.contains_key(email) {
-            Ok(self.users.get(email).unwrap())
+            Ok(self.users.get(email).unwrap().clone())
         } else {
             Err(UserStoreError::UserNotFound)
         }
     }
 
-    pub fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
+     async fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
         if self.users.contains_key(email) {
             if self.users.get(email).unwrap().password == password {
                 Ok(())
@@ -64,7 +62,7 @@ mod tests {
             password: "test123badpass".to_string(),
             requires_2fa: true,
         };
-        hashmap_user_store.add_user(user.clone()).unwrap();
+        hashmap_user_store.add_user(user.clone()).await.unwrap();
         assert_eq!(hashmap_user_store.users.get(&user.email).unwrap(), &user);
     }
 
@@ -76,8 +74,8 @@ mod tests {
             password: "test123badpass".to_string(),
             requires_2fa: true,
         };
-        hashmap_user_store.add_user(user.clone()).unwrap();
-        assert_eq!(hashmap_user_store.get_user(&user.email).unwrap(), &user);
+        hashmap_user_store.add_user(user.clone()).await.unwrap();
+        assert_eq!(hashmap_user_store.get_user(&user.email).await.unwrap(), user);
     }
 
     #[tokio::test]
@@ -88,14 +86,14 @@ mod tests {
             password: "test123badpass".to_string(),
             requires_2fa: true,
         };
-        hashmap_user_store.add_user(user.clone()).unwrap();
+        hashmap_user_store.add_user(user.clone()).await.unwrap();
         assert_eq!(hashmap_user_store.validate_user(
             &user.email,
-            "test123badpass").unwrap(),
+            "test123badpass").await.unwrap(),
             ());
         assert_eq!(hashmap_user_store.validate_user(
             &user.email,
-            "test123badpass2").unwrap_err(),
+            "test123badpass2").await.unwrap_err(),
             UserStoreError::InvalidCredentials);
     }
 }

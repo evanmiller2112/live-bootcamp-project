@@ -16,7 +16,7 @@ use domain::AuthAPIError;
 mod routes;
 pub mod services;
 pub mod app_state;
-mod domain;
+pub mod domain;
 
 pub struct Application {
     server: Serve<Router, Router>,
