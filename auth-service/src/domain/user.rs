@@ -6,10 +6,10 @@ pub struct User {
 }
 
 impl User {
-    pub fn new() -> Self {
+    pub fn new(email: String, password: String, requires_2fa: bool) -> Self {
         Self {
-            email: String::new(),
-            password: String::new(),
+            email: email,
+            password: password,
             requires_2fa: false,
         }
     }

@@ -1,32 +1,54 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
+use email_address::*;
 
 use crate::{app_state::AppState, domain::User};
+use crate::services::UserStoreError;
+use crate::services::HashmapUserStore;
+use crate::domain::AuthAPIError;
 
 pub async fn signup(
     state: State<AppState>,
     Json(request): Json<SignupRequest>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AuthAPIError> {
     // Create a new `User` instance using data in the `request`
-    let user = todo!();
-
+    let user = User::new(request.email, request.password, request.requires_2fa);
     let mut user_store = state.user_store.write().await;
 
-    // TODO: Add `user` to the `user_store`. Simply unwrap the returned `Result` enum type for now.
+    // check for email not valid
+    if !EmailAddress::is_valid(&user.email) {
+        return Err(AuthAPIError::InvalidCredentials);
+    }
+    
+    // Check for password too short.
+    if user.password.len() < 8 {
+        return Err(AuthAPIError::InvalidCredentials);
+    }
+    
+    // If user exists, throw that error.
+    if let Ok(User) = user_store.get_user(&user.email) {
+        return Err(AuthAPIError::UserAlreadyExists);
+    }
+    
+    // If there's an error, throw an error
+    if let Err(e) = user_store.add_user(user)
+    {
+        return Err(AuthAPIError::UnexpectedError);
+    }
 
     let response = Json(SignupResponse {
         message: "User created successfully!".to_string(),
     });
 
-    (StatusCode::CREATED, response)
+    Ok((StatusCode::CREATED, response))
 }
 
-//...
 
 #[derive(Deserialize)]
 pub struct SignupRequest {
     pub email: String,
     pub password: String,
+    pub requires_2fa: bool,
 }
 
 #[derive(Serialize)]

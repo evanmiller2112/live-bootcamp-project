@@ -1,15 +1,13 @@
-use auth_service::app_state::AppState;
-use auth_service::services::hashmap_user_store::HashmapUserStore as HashmapUserStore;
-use axum::{response::Html, routing::get, Router};
-use tower_http::services::ServeDir;
-use auth_service::Application;
+use std::sync::Arc;
+
+use auth_service::{services::HashmapUserStore, Application, app_state::AppState};
+use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() {
-    //let user_store = HashmapUserStore(());
-    //let app_state = AppState::new(user_store);
-    let user_store = todo!();
-    let app_state = todo!();
+    
+    let user_store = HashmapUserStore::new();
+    let app_state = AppState::new(Arc::new(RwLock::new(user_store)));
 
     let app = Application::build(app_state, "0.0.0.0:0")
         .await

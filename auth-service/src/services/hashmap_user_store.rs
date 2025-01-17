@@ -11,11 +11,16 @@ pub enum UserStoreError {
 }
 
 #[derive(Default)]
-pub struct HashmapUserStore {
+pub struct  HashmapUserStore {
     users: HashMap<String, User>,
 }
 
 impl HashmapUserStore {
+    pub fn new() -> Self {
+        Self {
+            users: HashMap::new(),
+        }
+    }
     pub fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         if self.users.contains_key(&user.email) {
             Err(UserStoreError::UserAlreadyExists)

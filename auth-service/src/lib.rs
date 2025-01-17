@@ -1,3 +1,8 @@
+use serde::{Serialize, Deserialize};
+use axum::{
+    response::{Json, Response},
+    http::StatusCode,
+};
 use axum::routing::post;
 use axum::Router;
 use axum::serve::Serve;
@@ -6,6 +11,7 @@ use axum::response::IntoResponse;
 use tower_http::services::ServeDir;
 use app_state::AppState;
 use routes::{login, logout, signup, verify_2fa, verify_token};
+use domain::AuthAPIError;
 
 mod routes;
 pub mod services;
@@ -42,3 +48,23 @@ impl Application {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ErrorResponse {
+    pub error: String,
+}
+
+impl IntoResponse for AuthAPIError {
+    fn into_response(self) -> Response {
+        let (status, error_message) = match self {
+            AuthAPIError::UserAlreadyExists => (StatusCode::CONFLICT, "User already exists"),
+            AuthAPIError::InvalidCredentials => (StatusCode::BAD_REQUEST, "Invalid credentials"),
+            AuthAPIError::UnexpectedError => {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
+            }
+        };
+        let body = Json(ErrorResponse {
+            error: error_message.to_string(),
+        });
+        (status, body).into_response()
+    }
+}
