@@ -1,6 +1,6 @@
-use std::ffi::CString;
 use validator::Validate;
+
+#[derive(Debug)]
 struct Email {
-    #[validate(email)]
     email: String,
 }
