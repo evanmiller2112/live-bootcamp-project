@@ -47,9 +47,18 @@ async fn should_return_401_if_incorrect_credentials() {
     let app = TestApp::new().await;
     let random_email = get_random_email();
 
+    let signup_body = serde_json::json!({
+        "email": random_email,
+        "password": "password123",
+        "requires2FA": false
+    });
+
+    let response = app.post_signup(&signup_body).await;
+    assert_eq!(response.status().as_u16(), 201);
+
     let login_body = serde_json::json!({
         "email": random_email,
-        "password": "password123"
+        "password": "abcABC123"
     });
     let response = app.post_login(&login_body).await;
     assert_eq!(response.status().as_u16(), 401);

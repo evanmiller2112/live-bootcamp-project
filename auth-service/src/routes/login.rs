@@ -7,6 +7,7 @@ use crate::{
     domain::{AuthAPIError, Email, Password, User},
     utils::auth::generate_auth_cookie,
 };
+use crate::domain::password;
 use crate::routes::SignupResponse;
 
 pub async fn login(
@@ -14,24 +15,34 @@ pub async fn login(
     jar: CookieJar,
     Json(request): Json<LoginRequest>,
 ) -> (CookieJar, Result<impl IntoResponse, AuthAPIError>) {
-    let email = Email::parse(
-        request.email.clone())
-            .map_err(|_| AuthAPIError::InvalidCredentials);
-    let password = Password::parse(
-        request.password.clone())
-            .map_err(|_| AuthAPIError::InvalidCredentials);
+    let password = match Password::parse(request.password) {
+        Ok(password) => password,
+        Err(_) => return (jar, Err(AuthAPIError::InvalidCredentials)),
+    };
+    let email = match Email::parse(request.email) {
+        Ok(email) => email,
+        Err(_) => return (jar, Err(AuthAPIError::InvalidCredentials)),
+    };
+
 
     let user_store = state.user_store.read().await;
 
-    let auth_result = user_store.validate_user(&email, &password)
-        .await.map_err(|_| AuthAPIError::IncorrectCredentials);
+    if user_store.validate_user(&email, &password).await.is_err() {
+        return (jar, Err(AuthAPIError::IncorrectCredentials));
+    };
 
-    // let response = Json(LoginResponse {
-    //     message: "User authenticated successfully!".to_string(),
-    // });
-    // Ok((StatusCode::OK, response))
-    let auth_cookie = todo!();
+    let user = match user_store.get_user(&email).await {
+        Ok(user) => user,
+        Err(_) => return (jar, Err(AuthAPIError::UnexpectedError)),
+    };
+
+    let auth_cookie = match generate_auth_cookie(&email) {
+        Ok(cookie) => cookie,
+        Err(_) => return (jar, Err(AuthAPIError::UnexpectedError)),
+    };
+
     let updated_jar = jar.add(auth_cookie);
+        
     (updated_jar, Ok(StatusCode::OK.into_response()))
 }
 
