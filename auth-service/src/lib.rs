@@ -62,6 +62,8 @@ impl IntoResponse for AuthAPIError {
             AuthAPIError::UnexpectedError => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
             }
+            AuthAPIError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid auth token"),
+            AuthAPIError::MissingToken => (StatusCode::BAD_REQUEST, "Missing auth token"),
         };
         let body = Json(ErrorResponse {
             error: error_message.to_string(),

@@ -10,6 +10,7 @@ use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
+    pub cookie_jar: Arc<Jar>, // New!
     pub http_client: reqwest::Client,
 }
 
