@@ -9,7 +9,7 @@ use auth_service::{
 };
 
 use uuid::Uuid;
-use auth_service::services::HashsetBannedTokenStore;
+use auth_service::services::{mock_email_client, HashmapTwoFACodeStore, HashsetBannedTokenStore};
 
 pub struct TestApp {
     pub address: String,
@@ -22,8 +22,14 @@ impl TestApp {
     pub async fn new() -> Self {
         let user_store = Arc::new(RwLock::new(HashmapUserStore::default()));
         let banned_token_store = Arc::new(RwLock::new(HashsetBannedTokenStore::default()));
-
-        let app_state = AppState::new(user_store, banned_token_store.clone());
+        let two_fa_code_store = Arc::new(RwLock::new(HashmapTwoFACodeStore::default()));
+        let email_client = Arc::new(mock_email_client::MockEmailClient);
+        let app_state = AppState::new(
+            user_store, 
+            banned_token_store.clone(), 
+            two_fa_code_store,
+            email_client,
+        );
 
         let app = Application::build(app_state, "127.0.0.1:0")
             .await
