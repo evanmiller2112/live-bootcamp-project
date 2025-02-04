@@ -71,9 +71,13 @@ pub struct TwoFACode(String);
 impl TwoFACode {
     pub fn parse(code: String) -> Result<Self, String> {
         // Ensure `code` is a valid 6-digit code
-        match code.len() {
-            6 => Ok(TwoFACode(code)),
-            _ => Err("Invalid 2FA code".to_string()),
+        if code.is_numeric() {
+            match code.len() {
+                6 => Ok(TwoFACode(code)),
+                _ => Err("Invalid 2FA code".to_string()),
+            }
+        } else {
+            Err("Invalid 2FA code".to_string())
         }
     }
 }
