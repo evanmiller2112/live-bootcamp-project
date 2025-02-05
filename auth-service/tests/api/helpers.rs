@@ -1,4 +1,4 @@
-use auth_service::app_state::BannedTokenStoreType;
+use auth_service::app_state::{BannedTokenStoreType, TwoFACodeStoreType};
 use reqwest::cookie::Jar;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -15,6 +15,7 @@ pub struct TestApp {
     pub address: String,
     pub cookie_jar: Arc<Jar>,
     pub banned_token_store: BannedTokenStoreType,
+    pub two_fa_code_store: TwoFACodeStoreType,
     pub http_client: reqwest::Client,
 }
 
@@ -27,7 +28,7 @@ impl TestApp {
         let app_state = AppState::new(
             user_store, 
             banned_token_store.clone(), 
-            two_fa_code_store,
+            two_fa_code_store.clone(),
             email_client,
         );
 
@@ -50,6 +51,7 @@ impl TestApp {
             address,
             cookie_jar,
             banned_token_store,
+            two_fa_code_store,
             http_client,
         }
     }

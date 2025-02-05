@@ -41,7 +41,7 @@ pub enum TwoFACodeStoreError {
 pub struct LoginAttemptId(String);
 
 impl LoginAttemptId {
-    pub fn parse(&self, id: String) -> Result<Self, String> {
+    pub fn parse(id: String) -> Result<Self, String> {
         // Use the `parse_str` function from the `uuid` crate to ensure `id` is a valid UUID
         let result = match uuid::Uuid::parse_str(&id) {
             Ok(uuid) => uuid,
@@ -70,26 +70,21 @@ pub struct TwoFACode(String);
 
 impl TwoFACode {
     pub fn parse(code: String) -> Result<Self, String> {
-        // Ensure `code` is a valid 6-digit code
-        if code.is_numeric() {
-            match code.len() {
-                6 => Ok(TwoFACode(code)),
-                _ => Err("Invalid 2FA code".to_string()),
-            }
+        let code_as_u32 = code
+            .parse::<u32>()
+            .map_err(|_| "Invalid 2FA code".to_owned())?;
+
+        if (100_000..=999_999).contains(&code_as_u32) {
+            Ok(Self(code))
         } else {
-            Err("Invalid 2FA code".to_string())
+            Err("Invalid 2FA code".to_owned())
         }
     }
 }
 
 impl Default for TwoFACode {
     fn default() -> Self {
-        let code = rand::thread_rng()
-            .sample_iter(&rand::distributions::Alphanumeric)
-            .take(6)
-            .map(char::from)
-            .collect::<String>();
-        TwoFACode(code)
+        Self(rand::thread_rng().gen_range(100_000..=999_999).to_string())
     }
 }
 
