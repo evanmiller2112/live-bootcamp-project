@@ -15,6 +15,7 @@ services:
     restart: "always" # automatically restart container when server crashes
     environment:
          JWT_SECRET: ${JWT_SECRET}
+         SQLX_OFFLINE: ${SQLX_OFFLINE}
          DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
 
     ports:

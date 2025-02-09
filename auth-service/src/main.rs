@@ -4,19 +4,18 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use auth_service::{
-    app_state::AppState, 
-    services::hashmap_user_store::HashmapUserStore, 
-    Application,
-    services::hashset_banned_token_store::HashsetBannedTokenStore,
+    app_state::AppState,
     utils::constants::DATABASE_URL,
+    Application,
 };
-use auth_service::app_state::BannedTokenStoreType;
 use auth_service::services::{HashmapTwoFACodeStore, MockEmailClient};
+use auth_service::services::data_stores::postgres_user_store::PostgresUserStore;
+use auth_service::services::data_stores::hashset_banned_token_store::HashsetBannedTokenStore;
 
 #[tokio::main]
 async fn main() {
     let pg_pool = configure_postgresql().await;
-    let user_store = Arc::new(RwLock::new(HashmapUserStore::default()));
+    let user_store = Arc::new(RwLock::new(PostgresUserStore::new(pg_pool)));    
     let banned_token_store = Arc::new(RwLock::new(HashsetBannedTokenStore::default()));
     let two_fa_code_store = Arc::new(RwLock::new(HashmapTwoFACodeStore::default()));
     let email_client = Arc::new(MockEmailClient);
