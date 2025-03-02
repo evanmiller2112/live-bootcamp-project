@@ -3,10 +3,15 @@ use reqwest::cookie::Jar;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use auth_service::services::data_stores::postgres_user_store::PostgresUserStore;
-
+use sqlx::{
+    postgres::{PgConnectOptions, PgPoolOptions},
+    Connection, Executor, PgConnection, PgPool,
+};
 
 use auth_service::{
-    app_state::AppState, Application
+    app_state::AppState, Application,
+    utils::constants::DATABASE_URL,
+    get_postgres_pool
 };
 
 use uuid::Uuid;
