@@ -12,9 +12,12 @@ use auth_service::services::MockEmailClient;
 use auth_service::services::data_stores::{postgres_user_store::PostgresUserStore, 
                                           redis_banned_token_store::RedisBannedTokenStore, 
                                           redis_two_fa_code_store::RedisTwoFACodeStore};
+use auth_service::utils::tracing::init_tracing;
 
 #[tokio::main]
 async fn main() {
+    color_eyre::install().expect("Failed to install color_eyre"); // New!
+    init_tracing();
     let pg_pool = configure_postgresql().await;
     let redis_connection = Arc::new(RwLock::new(configure_redis()));
 
