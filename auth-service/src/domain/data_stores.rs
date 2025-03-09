@@ -1,4 +1,6 @@
+use color_eyre::eyre::Report;
 use rand::Rng;
+use thiserror::Error;
 
 use super::{Email, Password, User};
 
@@ -10,14 +12,29 @@ pub trait UserStore {
                            -> Result<(), UserStoreError>;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Error)]
 pub enum UserStoreError {
+    #[error("User already exists")]
     UserAlreadyExists,
+    #[error("User not found")]
     UserNotFound,
+    #[error("Invalid credentials")]
     InvalidCredentials,
-    UnexpectedError,
+    #[error("Unexpected error")]
+    UnexpectedError(#[source] Report),
 }
 
+impl PartialEq for UserStoreError {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::UserAlreadyExists, Self::UserAlreadyExists)
+                | (Self::UserNotFound, Self::UserNotFound)
+                | (Self::InvalidCredentials, Self::InvalidCredentials)
+                | (Self::UnexpectedError(_), Self::UnexpectedError(_))
+        )
+    }
+}
 #[async_trait::async_trait]
 pub trait BannedTokenStore {
     async fn add_token(&mut self, token: String) -> Result<(), BannedTokenStoreError>;
